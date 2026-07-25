@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEDUSA OS V3.7 - CONTROL DE LLAVES</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#eee;font-family:Inter,sans-serif;padding:12px}
+.gold{color:#E5B73F}
+.header{border:2px solid #E5B73F;border-radius:16px;padding:14px;text-align:center;background:linear-gradient(180deg,#1a1a1a,#111);margin-bottom:12px}
+.header h1{font-size:22px;letter-spacing:3px;color:#E5B73F;font-weight:900}
+.card{background:#171717;border:1px solid #2a2a2a;border-radius:14px;padding:16px;margin-bottom:12px}
+label{font-size:10px;letter-spacing:1px;color:#E5B73F;text-transform:uppercase;display:block;margin:10px 0 5px;font-weight:700}
+input,select{width:100%;background:#0f0f0f;border:1px solid #333;border-radius:10px;color:#fff;padding:12px;font-size:15px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-gold{background:#E5B73F;color:#000;border:0;border-radius:12px;padding:15px;width:100%;font-weight:900;font-size:15px;margin-top:12px;display:block;text-align:center;text-decoration:none;letter-spacing:.5px}
+.btn-dark{background:#222;color:#fff;border:1px solid #333;border-radius:12px;padding:12px;width:100%;margin-top:8px;display:block;text-align:center;text-decoration:none}
+.key{background:#101010;border:1px dashed #333;border-radius:10px;padding:10px;margin-top:8px}
+/* ACTA PRINT STYLE */
+#actaDoc{background:#fff;color:#000;border-radius:0;padding:20px;font-family:Inter,sans-serif}
+#actaDoc h2{font-size:18px;text-align:center;letter-spacing:1px}
+#actaDoc .folio{font-family:JetBrains Mono,monospace;border:2px solid #000;padding:4px 8px;font-size:12px;display:inline-block}
+#actaDoc table{width:100%;border-collapse:collapse;margin-top:12px}
+#actaDoc th{background:#000;color:#E5B73F;font-size:10px;padding:8px;border:1px solid #000;text-transform:uppercase}
+#actaDoc td{border:1px solid #000;padding:8px;font-size:13px}
+#actaDoc .firma{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:30px}
+#actaDoc .linea{border-top:1px solid #000;margin-top:60px;padding-top:6px;text-align:center;font-size:11px}
+.qrBox{background:#fff;padding:10px;border:2px solid #000;display:flex;justify-content:center;align-items:center}
+@media print{
+ body{background:#fff;padding:0}
+ .no-print{display:none!important}
+ #actaDoc{border:0;padding:0}
+ #actaView{background:#fff;border:0}
+}
+</style>
+</head>
+<body>
+<div class="header no-print"><h1>MEDUSA OS V3.7</h1><p style="font-size:10px;opacity:.7;margin-top:4px">CONTROL DE LLAVES · DOCUMENTO OFICIAL · V3.7</p><p id="dom" style="font-family:monospace;font-size:10px;color:#E5B73F;margin-top:6px"></p></div>
+
+<div id="formView" class="card no-print">
+<label>Condominio</label><select id="condo"><option>Paraíso</option><option>Ciudad del Sol</option><option>Vista Real</option><option>El Refugio</option><option>Los Héroes</option><option>Cadaqués</option><option>Otro</option></select>
+<div class="row2"><div><label>Corporación</label><select id="corp"><option>OSAN</option><option>ALFHAV</option><option>SEGURPRIV</option><option>OTRA</option></select></div><div><label>Fecha</label><input id="fec" type="date"></div></div>
+<div class="row2"><div><label>Entrega (Admin)</label><input id="ent" value="Administración"></div><div><label>Recibe (Vigilante) *</label><input id="rec" placeholder="Nombre completo"></div></div>
+<label style="margin-top:16px">🔑 CONTROL DE LLAVES</label>
+<div id="keys"></div>
+<button class="btn-dark" type="button" onclick="addK()">+ Agregar Llave</button>
+<button class="btn-gold" type="button" onclick="gen()">GENERAR ACTA OFICIAL</button>
+</div>
+
+<div id="actaView" style="display:none">
+<div id="actaDoc">
+<div style="display:flex;justify-content:space-between;align-items:start">
+<div><h2>ACTA DE ENTREGA<br>CONTROL DE LLAVES</h2><p style="font-size:10px;margin-top:4px">MEDUSA · SEGURIDAD PRIVADA · QUERÉTARO</p></div>
+<div style="text-align:right"><span class="folio" id="folio">FOLIO</span><div class="qrBox" style="margin-top:8px"><canvas id="qr" width="90" height="90"></canvas></div><p id="qrUrl" style="font-size:7px;font-family:monospace;word-break:break-all;margin-top:4px;max-width:110px"></p></div>
+</div>
+
+<p style="margin-top:16px;font-size:13px;line-height:1.5">
+En el condominio <b id="pCondo"></b>, siendo las <b id="pHora"></b> del día <b id="pFecha"></b>, la administración representada por <b id="pEnt"></b> hace entrega al personal de seguridad <b id="pRec"></b> de la corporación <b id="pCorp"></b>, de las siguientes llaves bajo su resguardo y responsabilidad:
+</p>
+
+<table><thead><tr><th style="width:8%">#</th><th>Llave / Acceso</th><th style="width:12%">Cant</th><th style="width:18%">Estado</th><th style="width:22%">Observaciones</th></tr></thead><tbody id="pKeys"></tbody></table>
+
+<p style="margin-top:14px;font-size:11px;line-height:1.4;background:#f5f5f5;padding:10px;border:1px solid #ddd">
+<b>COMPROMISO:</b> El vigilante se hace responsable del buen uso, custodia y devolución de las llaves descritas. En caso de extravío, deberá reportar inmediatamente a administración y seguridad. Queda prohibido duplicar llaves sin autorización escrita.
+</p>
+
+<div class="firma">
+<div><div class="linea">Entrega<br><span id="fEnt"></span><br>Administración</div></div>
+<div><div class="linea">Recibe<br><span id="fRec"></span><br>Vigilancia / Seguridad</div></div>
+</div>
+
+<p style="margin-top:20px;font-size:8px;text-align:center;opacity:.6">Documento generado por MEDUSA OS V3.7 · Verificación: <span id="vUrl"></span> · Querétaro, México</p>
+</div>
+
+<div class="no-print" style="padding:12px">
+<a id="btnWA" class="btn-gold" target="_blank" href="#">📱 ENVIAR POR WHATSAPP</a>
+<a class="btn-dark" href="#" onclick="window.print();return false;">📄 GUARDAR PDF / IMPRIMIR</a>
+<a class="btn-dark" href="#" onclick="location.reload();return false;" style="background:#111">🔄 Nueva Acta</a>
+</div>
+</div>
+
+<script>
+document.getElementById('dom').textContent=window.location.origin;
+document.getElementById('fec').valueAsDate=new Date();
+let KD=[{n:'Acceso Principal',c:1,e:'Buen estado',obs:''},{n:'Caseta',c:1,e:'Buen estado',obs:''}];
+function renderK(){
+ let h='';KD.forEach((k,i)=>{
+ h+=`<div class=key><div class=row2><input value="${k.n}" placeholder="Ej: Alberca, Portón" oninput="KD[${i}].n=this.value"><input value="${k.obs}" placeholder="Obs" oninput="KD[${i}].obs=this.value"></div><div class=row2 style="margin-top:6px"><select onchange="KD[${i}].c=this.value"><option ${k.c==1?'selected':''}>1</option><option ${k.c==2?'selected':''}>2</option><option ${k.c==3?'selected':''}>3</option><option ${k.c==4?'selected':''}>4</option><option ${k.c==5?'selected':''}>5</option><option ${k.c==10?'selected':''}>10</option></select><select onchange="KD[${i}].e=this.value"><option ${k.e=='Buen estado'?'selected':''}>Buen estado</option><option ${k.e=='Nueva'?'selected':''}>Nueva</option><option ${k.e=='Usada'?'selected':''}>Usada</option><option ${k.e=='Desgastada'?'selected':''}>Desgastada</option></select></div></div>`;
+ });
+ document.getElementById('keys').innerHTML=h;
+}
+function addK(){KD.push({n:'',c:1,e:'Buen estado',obs:''});renderK();}
+renderK();
+
+function gen(){
+ let r=document.getElementById('rec').value.trim(); if(!r){alert('Pon nombre del vigilante');return;}
+ let condo=document.getElementById('condo').value, corp=document.getElementById('corp').value, ent=document.getElementById('ent').value, fec=document.getElementById('fec').value;
+ let now=new Date(); let hora=now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+ let id=`${corp}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+ let url=window.location.origin+'/actas/'+id;
+
+ document.getElementById('formView').style.display='none';
+ document.getElementById('actaView').style.display='block';
+
+ document.getElementById('folio').textContent=id;
+ document.getElementById('pCondo').textContent=condo;
+ document.getElementById('pHora').textContent=hora;
+ document.getElementById('pFecha').textContent=fec;
+ document.getElementById('pEnt').textContent=ent;
+ document.getElementById('pRec').textContent=r;
+ document.getElementById('pCorp').textContent=corp;
+ document.getElementById('fEnt').textContent=ent;
+ document.getElementById('fRec').textContent=r;
+ document.getElementById('vUrl').textContent=url;
+ document.getElementById('qrUrl').textContent=url;
+
+ let rows=''; KD.forEach((k,i)=>{rows+=`<tr><td>${i+1}</td><td>${k.n||'-'}</td><td style="text-align:center">${k.c}</td><td>${k.e}</td><td style="font-size:11px">${k.obs||''}</td></tr>`;});
+ document.getElementById('pKeys').innerHTML=rows;
+
+ QRCode.toCanvas(document.getElementById('qr'), url, {width:90,margin:1,color:{dark:'#000',light:'#fff'}});
+
+ let txt=`🔑 *ACTA CONTROL DE LLAVES - ${id}*\n\nCondominio: ${condo}\nEntrega: ${ent}\nRecibe: ${r} (${corp})\nFecha: ${fec} ${hora}\n\nLlaves:\n${KD.map((k,i)=>`${i+1}. ${k.n} x${k.c} (${k.e})`).join('\n')}\n\nVerifica en: ${url}\n\nMEDUSA OS V3.7`;
+ let wa='https://wa.me/?text='+encodeURIComponent(txt);
+ document.getElementById('btnWA').href=wa;
+}
+</script>
+</body>
+</html>
