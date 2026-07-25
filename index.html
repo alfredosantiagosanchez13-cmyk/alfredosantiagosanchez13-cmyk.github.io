@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEDUSA OS V3.5 FIX</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0a0a0a;color:#eee;font-family:system-ui;padding:14px}
+.header{border:2px solid #E5B73F;border-radius:14px;padding:14px;text-align:center;background:#111;margin-bottom:14px}
+.header h1{color:#E5B73F;font-size:20px}.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:16px;margin-bottom:12px}
+label{font-size:11px;color:#E5B73F;letter-spacing:1px;display:block;margin:10px 0 5px;text-transform:uppercase}
+input,select{width:100%;background:#111;border:1px solid #333;border-radius:10px;color:#fff;padding:11px}
+.btn-gold{background:#E5B73F;color:#000;border:0;border-radius:10px;padding:13px;width:100%;font-weight:900;margin-top:14px}
+.btn-ghost{background:#222;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;width:100%;margin-top:8px}
+.qr{background:#fff;padding:12px;border-radius:12px;display:flex;justify-content:center;margin:12px 0}
+.badge{font-family:monospace;border:1px solid #E5B73F;color:#E5B73F;padding:5px 9px;border-radius:7px}
+table{width:100%;border-collapse:collapse;margin-top:10px}th{color:#E5B73F;font-size:11px;text-align:left;border-bottom:1px solid #333;padding:5px}td{padding:7px 5px;border-bottom:1px solid #222;font-size:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.key{background:#111;border:1px solid #222;border-radius:10px;padding:9px;margin-top:8px}</style></head><body>
+<div class="header"><h1>MEDUSA OS V3.5</h1><p style="opacity:.7;font-size:11px">QR GARANTIZADO - GALAXY A15 FIX</p><p id="dom" style="color:#E5B73F;font-family:monospace;font-size:12px;margin-top:6px"></p></div>
+<div id="form" class="card"><label>Condominio</label><select id="condo"><option>Paraíso</option><option>Ciudad del Sol</option><option>Vista Real</option><option>El Refugio</option><option>Los Héroes</option></select>
+<label>Corporación</label><select id="corp"><option>OSAN</option><option>ALFHAV</option><option>SEGURPRIV</option></select>
+<label>Entrega</label><input id="ent" value="Administración"><label>Recibe (Vigilante)*</label><input id="rec" placeholder="Nombre vigilante">
+<label>Fecha</label><input id="fec" type="date"><div id="keys"></div><button class="btn-ghost" onclick="addK()">+ Llave</button><button class="btn-gold" onclick="gen()">GENERAR ACTA</button></div>
+<div id="acta" class="card" style="display:none"><div style="display:flex;justify-content:space-between"><span class="badge" id="aid"></span><button class="btn-ghost" style="width:auto;padding:5px 10px" onclick="location.href=location.origin+location.pathname">Nueva</button></div>
+<h3 id="atitle" style="margin:10px 0"></h3><p id="ameta" style="opacity:.7;font-size:12px"></p><table><thead><tr><th>Llave</th><th>Cant</th><th>Estado</th></tr></thead><tbody id="akeys"></tbody></table>
+<div class="qr"><canvas id="qr"></canvas></div><p id="qtxt" style="font-family:monospace;font-size:10px;word-break:break-all;text-align:center"></p>
+<button class="btn-gold" id="bwa">ENVIAR WHATSAPP</button><button class="btn-ghost" onclick="window.print()">IMPRIMIR</button></div>
+<script>
+document.getElementById('dom').textContent=window.location.origin;
+document.getElementById('fec').valueAsDate=new Date();
+let KD=[{n:'Llave principal',c:1,e:'Buen estado'}];
+function renderK(){let h='';KD.forEach((k,i)=>{h+=`<div class=key><input value="${k.n}" placeholder="Nombre llave" oninput="KD[${i}].n=this.value"><div class=row style="margin-top:6px"><select onchange="KD[${i}].c=this.value"><option ${k.c==1?'selected':''}>1</option><option ${k.c==2?'selected':''}>2</option><option ${k.c==3?'selected':''}>3</option><option ${k.c==5?'selected':''}>5</option></select><select onchange="KD[${i}].e=this.value"><option>Buen estado</option><option>Nueva</option><option>Usada</option></select></div></div>`});document.getElementById('keys').innerHTML=h;}
+function addK(){KD.push({n:'',c:1,e:'Buen estado'});renderK();}renderK();
+function gen(){let r=document.getElementById('rec').value.trim();if(!r){alert('Pon vigilante');return;}
+let condo=document.getElementById('condo').value,corp=document.getElementById('corp').value,ent=document.getElementById('ent').value,fec=document.getElementById('fec').value;
+let now=new Date();let id=`${corp}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+let url=window.location.origin+'/actas/'+id;
+document.getElementById('form').style.display='none';document.getElementById('acta').style.display='block';
+document.getElementById('aid').textContent=id;document.getElementById('atitle').textContent='Acta '+id+' - '+condo;
+document.getElementById('ameta').textContent=condo+' | Entrega:'+ent+' | Recibe:'+r+' | '+fec;
+let rows='';KD.forEach(k=>rows+=`<tr><td>${k.n}</td><td>${k.c}</td><td>${k.e}</td></tr>`);document.getElementById('akeys').innerHTML=rows;
+document.getElementById('qtxt').textContent=url;
+QRCode.toCanvas(document.getElementById('qr'),url,{width:220,margin:1,color:{dark:'#000',light:'#fff'}});
+let txt=`Acta ${id} - ${condo} - Llaves entregadas a ${r}. Verifica en: ${url}`;
+document.getElementById('bwa').onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+let all=JSON.parse(localStorage.getItem('medusa_actas')||'[]');all.unshift({id,condo,url});localStorage.setItem('medusa_actas',JSON.stringify(all));
+}
+</script></body></html>
