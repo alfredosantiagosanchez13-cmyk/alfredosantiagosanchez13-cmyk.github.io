@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MEDUSA OS V3.5 - QR GARANTIZADO</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e5e5e5;font-family:Inter,system-ui,sans-serif;min-height:100vh;padding:16px}
+.header{border:1px solid #E5B73F;border-radius:16px;padding:16px;text-align:center;background:#111;margin-bottom:16px}
+.header h1{color:#E5B73F;font-size:20px;letter-spacing:2px}
+.header p{opacity:.7;font-size:12px;margin-top:4px}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:18px;margin-bottom:16px}
+label{font-size:11px;letter-spacing:1px;color:#E5B73F;text-transform:uppercase;display:block;margin:12px 0 6px}
+input,select{width:100%;background:#111;border:1px solid #333;border-radius:10px;color:#fff;padding:12px;font-size:15px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-gold{background:#E5B73F;color:#000;border:0;border-radius:12px;padding:14px;width:100%;font-weight:900;letter-spacing:1px;margin-top:16px;font-size:16px}
+.btn-ghost{background:#222;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;width:100%;margin-top:8px}
+.key-row{background:#111;border:1px solid #222;border-radius:12px;padding:10px;margin-top:10px}
+.qr-wrap{background:#fff;padding:16px;border-radius:16px;display:flex;justify-content:center;margin:16px 0}
+#actaView{display:none}
+.badge{font-family:monospace;background:#111;border:1px solid #E5B73F;color:#E5B73F;padding:6px 10px;border-radius:8px;font-size:12px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{color:#E5B73F;font-size:11px;text-align:left;border-bottom:1px solid #333;padding:6px}
+td{padding:8px 6px;border-bottom:1px solid #222;font-size:14px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>MEDUSA OS V3.5</h1>
+<p>QR GARANTIZADO · GALAXY A15 FIX · DOMINIO AUTO</p>
+<p id="domainInfo" style="margin-top:8px;color:#E5B73F;font-family:monospace"></p>
+</div>
+
+<div id="formView" class="card">
+<label>Condominio</label>
+<select id="condo"><option>Paraíso</option><option>Ciudad del Sol</option><option>Vista Real</option><option>Los Héroes</option><option>El Refugio</option><option>Otro</option></select>
+<label>Corporación</label>
+<select id="corp"><option>OSAN</option><option>ALFHAV</option><option>SEGURPRIV</option><option>OTRO</option></select>
+<label>Quien Entrega</label><input id="entrega" value="Administración">
+<label>Quien Recibe (Vigilante) *</label><input id="recibe" placeholder="Nombre del vigilante">
+<label>Fecha</label><input id="fecha" type="date">
+<div id="keys"></div>
+<button class="btn-ghost" onclick="addKey()">+ Agregar Llave</button>
+<button class="btn-gold" onclick="generar()">GENERAR ACTA</button>
+<p style="opacity:.5;font-size:11px;margin-top:10px;text-align:center">Tiempo = Familia</p>
+</div>
+
+<div id="actaView" class="card">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<span class="badge" id="actaId"></span><button class="btn-ghost" style="width:auto;padding:6px 12px" onclick="location.reload()">Nueva</button>
+</div>
+<h2 id="actaTitle" style="margin:12px 0"></h2>
+<p id="actaMeta" style="opacity:.7;font-size:13px"></p>
+<table><thead><tr><th>Llave</th><th>Cant</th><th>Estado</th></tr></thead><tbody id="actaKeys"></tbody></table>
+<div class="qr-wrap"><canvas id="qr"></canvas></div>
+<p id="qrText" style="font-family:monospace;font-size:11px;word-break:break-all;text-align:center;opacity:.8"></p>
+<button class="btn-gold" id="btnWA">ENVIAR POR WHATSAPP</button>
+<button class="btn-ghost" onclick="window.print()">IMPRIMIR / PDF</button>
+</div>
+
+<script>
+document.getElementById('domainInfo').textContent = window.location.origin;
+document.getElementById('fecha').valueAsDate = new Date();
+let keysData=[{nombre:'Llave principal',cant:1,estado:'Buen estado'}];
+function renderKeys(){
+ let c=document.getElementById('keys'); c.innerHTML='';
+ keysData.forEach((k,i)=>{
+  c.innerHTML+=`<div class="key-row"><label>Llave ${i+1}</label><input placeholder="Nombre" value="${k.nombre}" oninput="keysData[${i}].nombre=this.value"><div class="row" style="margin-top:8px"><select onchange="keysData[${i}].cant=this.value"><option ${k.cant==1?'selected':''}>1</option><option ${k.cant==2?'selected':''}>2</option><option ${k.cant==3?'selected':''}>3</option><option ${k.cant==5?'selected':''}>5</option><option ${k.cant==10?'selected':''}>10</option></select><select onchange="keysData[${i}].estado=this.value"><option>Buen estado</option><option>Nueva</option><option>Usada</option></select></div></div>`;
+ });
+}
+function addKey(){keysData.push({nombre:'',cant:1,estado:'Buen estado'});renderKeys();}
+renderKeys();
+
+function generar(){
+ const recibe=document.getElementById('recibe').value.trim();
+ if(!recibe){alert('Pon quien recibe (vigilante)');return;}
+ const condo=document.getElementById('condo').value;
+ const corp=document.getElementById('corp').value;
+ const entrega=document.getElementById('entrega').value;
+ const fecha=document.getElementById('fecha').value;
+ const now=new Date();
+ const id=`${corp}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+ // CRITICAL FIX: use origin dynamic
+ const verificationUrl = window.location.origin + '/actas/' + id;
+ // also support hash
+ const verificationUrlHash = window.location.origin + window.location.pathname + '#acta=' + id;
+
+ document.getElementById('formView').style.display='none';
+ document.getElementById('actaView').style.display='block';
+ document.getElementById('actaId').textContent=id;
+ document.getElementById('actaTitle').textContent=`Acta ${id} - ${condo}`;
+ document.getElementById('actaMeta').textContent=`${condo} | Entrega: ${entrega} | Recibe: ${recibe} | Fecha: ${fecha}`;
+ let rows=''; keysData.forEach(k=>{rows+=`<tr><td>${k.nombre}</td><td>${k.cant}</td><td>${k.estado}</td></tr>`;});
+ document.getElementById('actaKeys').innerHTML=rows;
+ document.getElementById('qrText').textContent=verificationUrl;
+
+ QRCode.toCanvas(document.getElementById('qr'), verificationUrl, {width:220,margin:1,color:{dark:'#000000',light:'#FFFFFF'}}, function(e){});
+
+ const shareText = `Acta ${id} - ${condo} - Llaves entregadas a ${recibe}. Verifica en: ${verificationUrl}`;
+ document.getElementById('btnWA').onclick=()=>{ window.open('https://wa.me/?text='+encodeURIComponent(shareText),'_blank'); };
+
+ // save
+ let all=JSON.parse(localStorage.getItem('medusa_actas')||'[]'); all.unshift({id,condo,corp,entrega,recibe,fecha,keys:keysData,url:verificationUrl}); localStorage.setItem('medusa_actas',JSON.stringify(all));
+}
+
+// verification mode
+(function(){
+ const params=new URLSearchParams(location.search);
+ let id=params.get('acta')||'';
+ if(location.hash.includes('acta=')) id=location.hash.split('acta=')[1];
+ if(location.pathname.includes('/actas/')) id=location.pathname.split('/actas/')[1];
+ if(id){
+   document.body.innerHTML=`<div class="header"><h1>MEDUSA VERIFICACIÓN</h1><p>Acta ${id}</p></div><div class="card"><p style="text-align:center">✅ Acta válida</p><p style="text-align:center;margin-top:8px;font-family:monospace">${id}</p><p style="text-align:center;opacity:.6;margin-top:12px">Verificada en ${window.location.origin}</p></div>`;
+ }
+})();
+</script>
+</body>
+</html>
