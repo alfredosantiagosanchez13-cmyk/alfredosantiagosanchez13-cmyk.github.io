@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MEDUSA · Los Prados Residencial</title>
+<style>
+  :root{
+    --verde:#3aa845; --naranja:#f0932b; --azul:#1e3a8a;
+    --bg:#0b0f14; --panel:#131a22; --panel2:#1a2330; --text:#e8edf2; --muted:#8a96a3;
+    --danger:#e0453c; --ok:#2ecc71; --border:#25313f;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:radial-gradient(circle at top,#141d27,#070a0d 70%);color:var(--text);min-height:100vh;}
+  .wrap{max-width:480px;margin:0 auto;padding-bottom:40px;}
+  header{padding:20px 18px 14px;text-align:center;border-bottom:1px solid var(--border);position:relative;}
+  header h1{margin:0;font-size:20px;font-weight:800;
+    background:linear-gradient(90deg,var(--verde),var(--naranja),var(--azul));
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  header p{margin:5px 0 0;color:var(--muted);font-size:12px;}
+  .badge-standalone{display:inline-block;margin-top:8px;font-size:10.5px;padding:4px 10px;border-radius:20px;
+    background:#1f2a1f;color:var(--ok);border:1px solid #2c4a2c;}
+
+  /* ---- Login ---- */
+  #screenLogin{padding:40px 24px;text-align:center;}
+  #screenLogin h2{font-size:16px;margin-bottom:22px;color:var(--muted);font-weight:600;}
+  .pin-dots{display:flex;gap:12px;justify-content:center;margin:22px 0;}
+  .pin-dots span{width:15px;height:15px;border-radius:50%;border:1px solid var(--border);background:transparent;}
+  .pin-dots span.filled{background:var(--naranja);border-color:var(--naranja);}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto;}
+  .keypad button{padding:18px 0;border-radius:14px;border:1px solid var(--border);background:var(--panel2);
+    color:var(--text);font-size:19px;font-weight:600;cursor:pointer;}
+  .keypad button:active{background:#243040;}
+  .keypad .del{color:var(--muted);font-size:13px;}
+  .pin-error{color:var(--danger);font-size:12.5px;text-align:center;height:18px;margin-top:8px;}
+
+  /* ---- Dashboard ---- */
+  #screenApp{display:none;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+  .who{font-size:12.5px;color:var(--muted);}
+  .who b{color:var(--text);}
+  .logout{font-size:11.5px;color:var(--danger);background:none;border:none;cursor:pointer;font-weight:bold;}
+
+  .condo-switch{display:flex;gap:8px;padding:14px 16px 0;}
+  .condo-switch button{flex:1;padding:10px 4px;border-radius:12px;border:1px solid var(--border);
+    background:var(--panel2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;}
+  .condo-switch button.active{background:linear-gradient(135deg,var(--verde),#2c7a34);color:#fff;border-color:transparent;}
+
+  .status-bar{margin:14px 16px 0;padding:12px 14px;border-radius:12px;background:var(--panel);
+    border:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12.5px;}
+  .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .status-dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok);}
+  .status-dot.lock{background:var(--danger);box-shadow:0 0 8px var(--danger);}
+
+  main{padding:16px;}
+  .section-group{display:none;} 
+  .section-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin:18px 4px 10px;}
+  .module-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .module-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 12px;text-align:left;cursor:pointer;transition:transform 0.1s;}
+  .module-card:active{transform:scale(0.98);background:var(--panel2);}
+  .module-card .ic{font-size:22px;}
+  .module-card .nm{font-size:12.5px;font-weight:700;margin-top:6px;}
+  .module-card .ds{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.3;}
+
+  /* ---- Vistas de Detalle ---- */
+  #screenDetail{display:none;padding:16px;}
+  .backbtn{background:none;border:none;color:var(--muted);font-size:13px;margin-bottom:14px;padding:0;cursor:pointer;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;}
+  .card h2{margin:0 0 12px;font-size:15px;}
+  .stub{text-align:center;padding:20px 10px;color:var(--muted);}
+
+  label{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 4px;}
+  input,select,textarea{width:100%;padding:11px;border-radius:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:14px;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--naranja);}
+  
+  .btn{width:100%;padding:13px;border-radius:11px;border:none;font-weight:700;font-size:13.5px;margin-top:14px;cursor:pointer;}
+  .btn-ok{background:var(--verde);color:#fff;}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+
+  /* ---- Tablas ---- */
+  .table-container{width:100%;overflow-x:auto;margin-top:10px;border-radius:8px;border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:12px;text-align:left;}
+  th{background:var(--panel2);color:var(--muted);padding:10px;font-weight:600;}
+  td{padding:10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+  
+  .estatus{display:inline-block;font-size:10px;padding:2px 8px;border-radius:8px;}
+  .estatus.pendiente{background:#2a2214;color:var(--naranja);}
+  .estatus.aprobado{background:#1f3a24;color:var(--ok);}
+  .estatus.rechazado{background:#3a1f1f;color:var(--danger);}
+  .estatus.activo{background:#1f3a24;color:var(--ok);}
+  .estatus.bloqueado{background:#3a1f1f;color:var(--danger);}
+
+  /* ---- Pantalla de Bloqueo / Robo Anti-Guardias ---- */
+  #screenPanicAntiTheft{display:none;position:fixed;inset:0;background:#4a0e0e;z-index:9999;padding:40px 24px;text-align:center;font-family:sans-serif;}
+  #screenPanicAntiTheft h1{font-size:42px;margin-bottom:10px;}
+  #screenPanicAntiTheft h2{color:#ff6b6b;font-size:22px;margin-top:0;}
+  #screenPanicAntiTheft p{font-size:15px;line-height:1.6;color:#fce4e4;background:rgba(0,0,0,0.3);padding:20px;border-radius:12px;border:1px solid #721c24;}
+
+  #modal_foto{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1000;justify-content:center;align-items:center;}
+  #modal_foto div{position:relative;max-width:90%;max-height:90%;}
+  #modal_foto span{position:absolute;top:-35px;right:0;color:white;font-size:24px;cursor:pointer;font-weight:bold;}
+  #modal_foto img{max-width:100%;max-height:80vh;border-radius:8px;border:1px solid var(--border);}
+  .loading{position:fixed;inset:0;background:#0b0f14;z-index:300;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading">Iniciando Canales de Seguridad MEDUSA…</div>
+
+<!-- PANTALLA CRÍTICA DE ANTI-ROBO CONGELANTE -->
+<div id="screenPanicAntiTheft">
+  <h1>🚨</h1>
+  <h2>DISPOSITIVO BLOQUEADO</h2>
+  <p>
+    <b>ATENCIÓN:</b> Este teléfono celular de caseta ha sido reportado como <b>ROBADO / EXTRAVIADO</b>.<br><br>
+    La información confidencial de los residentes ha sido borrada de este terminal por seguridad.<br><br>
+    <span style="color:#fff; font-size:18px; font-weight:800; background:#000; display:block; padding:10px; border-radius:6px; margin-top:10px;">
+      ⚠️ ESTE TELÉFONO ESTÁ SIENDO RASTREADO EN TIEMPO REAL VÍA GPS PARA ENTREGAR COORDENADAS A SERVICIOS DE EMERGENCIA.
+    </span>
+  </p>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+  <header>
+    <h1>🪼 MEDUSA · LOS PRADOS</h1>
+    <p>Fracción F4-133 · Municipio de Querétaro</p>
+    <span class="badge-standalone" id="txtImeiLabel">Terminal Autónoma</span>
+  </header>
+
+  <!-- PANTALLA: LOGIN -->
+  <div id="screenLogin">
+    <h2 style="margin-top:26px;">🔐 Ingresa tu PIN de Acceso</h2>
+    <div class="pin-dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="keypad">
+      <button onclick="pressPin('1')">1</button><button onclick="pressPin('2')">2</button><button onclick="pressPin('3')">3</button>
+      <button onclick="pressPin('4')">4</button><button onclick="pressPin('5')">5</button><button onclick="pressPin('6')">6</button>
+      <button onclick="pressPin('7')">7</button><button onclick="pressPin('8')">8</button><button onclick="pressPin('9')">9</button>
+      <button class="del" onclick="clearPin()">C</button><button onclick="pressPin('0')">0</button><button class="del" onclick="deleteLastPin()">⌫</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA: MENÚ GENERAL -->
+  <div id="screenApp">
+    <div class="topbar">
+      <div class="who">Rol Activo: <b id="txtUserRole">Cargando...</b></div>
+      <button class="logout" onclick="logout()">Salir ✕</button>
+    </div>
+
+    <div class="condo-switch">
+      <button id="btnCondo1" class="active" onclick="switchCondo('Los Prados 1')">Los Prados 1</button>
+      <button id="btnCondo2" onclick="switchCondo('Los Prados 2')">Los Prados 2</button>
+    </div>
+
+    <div class="status-bar">
+      <div id="cfgDot" class="status-dot on"></div>
+      <div id="statusText">Verificando escudo cibernético...</div>
+    </div>
+
+    <main>
+      <!-- BLOQUE ALPHA (Solo para Ti como Dueño / Administrador) -->
+      <div id="groupAlpha" class="section-group">
+        <div class="section-title" style="color:var(--naranja); font-weight:800;">⚡ Panel Maestro Alpha (Dueño)</div>
+        <div class="module-grid">
+          <div class="module-card" onclick="openModule('Alpha', '⚡ Sistema Anti-Robo e IMEI')" style="border-color:var(--naranja);">
